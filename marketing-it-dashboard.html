@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marketing IT Dashboard — 2026 YTD</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sap-blue:    #0070f2;
+      --sap-dark:    #1d2d3e;
+      --sap-mid:     #354a5e;
+      --sap-light:   #f5f6f7;
+      --sap-border:  #d9dfe8;
+      --green:       #30914c;
+      --amber:       #e76500;
+      --red:         #bb0000;
+      --text-main:   #1d2d3e;
+      --text-sub:    #556b82;
+      --white:       #ffffff;
+      --card-radius: 10px;
+      --shadow:      0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: '72', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--sap-light);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, var(--sap-dark) 0%, var(--sap-mid) 100%);
+      color: var(--white);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header .logo {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    header h1 { font-size: 22px; font-weight: 700; }
+    header .meta {
+      text-align: right;
+      font-size: 12px;
+      opacity: 0.75;
+      line-height: 1.8;
+    }
+    header .meta strong { color: var(--white); opacity: 1; font-size: 13px; }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+    }
+
+    /* ── KPI ROW ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+    .kpi-card {
+      background: var(--white);
+      border-radius: var(--card-radius);
+      padding: 22px 20px 18px;
+      box-shadow: var(--shadow);
+      border-top: 4px solid var(--sap-blue);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .kpi-card.delivered  { border-top-color: var(--green); }
+    .kpi-card.active     { border-top-color: var(--sap-blue); }
+    .kpi-card.backlog    { border-top-color: var(--sap-border); }
+    .kpi-card.cancelled  { border-top-color: var(--red); }
+    .kpi-card .kpi-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-sub); }
+    .kpi-card .kpi-value { font-size: 42px; font-weight: 700; line-height: 1; }
+    .kpi-card.total      .kpi-value { color: var(--sap-dark); }
+    .kpi-card.delivered  .kpi-value { color: var(--green); }
+    .kpi-card.active     .kpi-value { color: var(--sap-blue); }
+    .kpi-card.backlog    .kpi-value { color: var(--text-sub); }
+    .kpi-card.cancelled  .kpi-value { color: var(--red); }
+    .kpi-card .kpi-sub   { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+    /* ── SLA KPI ROW ── */
+    .sla-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+    .sla-card {
+      background: var(--sap-dark);
+      color: var(--white);
+      border-radius: var(--card-radius);
+      padding: 20px 18px 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sla-card .sla-label { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.65; }
+    .sla-card .sla-value { font-size: 32px; font-weight: 700; line-height: 1; }
+    .sla-card .sla-sub   { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+    /* ── CARD GRID ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .charts-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--card-radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .card-subtitle {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .chart-wrap.pie   { max-width: 280px; margin: 0 auto; }
+    .chart-wrap.bar   { height: 220px; }
+    .chart-wrap.hbar  { height: 240px; }
+
+    /* ── TABLES ── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead tr {
+      background: var(--sap-light);
+      border-bottom: 2px solid var(--sap-border);
+    }
+    thead th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--sap-border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 12px; vertical-align: middle; }
+    .ticket-key {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--sap-blue);
+      white-space: nowrap;
+    }
+    .ticket-key a { color: inherit; text-decoration: none; }
+    .ticket-key a:hover { text-decoration: underline; }
+    .summary-cell { max-width: 340px; color: var(--text-main); line-height: 1.4; }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-green   { background: #e8f5eb; color: var(--green); }
+    .badge-blue    { background: #e5f1ff; color: var(--sap-blue); }
+    .badge-amber   { background: #fff3e5; color: var(--amber); }
+    .badge-red     { background: #ffe8e8; color: var(--red); }
+    .badge-grey    { background: #f0f0f0; color: #666; }
+    .badge-purple  { background: #f0e8ff; color: #7b2ea0; }
+
+    .days-cell { font-weight: 700; text-align: right; white-space: nowrap; }
+    .days-ok   { color: var(--green); }
+    .days-mid  { color: var(--sap-blue); }
+    .days-warn { color: var(--amber); }
+    .days-risk { color: var(--red); }
+
+    /* ── AGING TABLE ── */
+    .aging-critical td { background: #fff5f5; }
+    .aging-elevated td { background: #fffbf0; }
+
+    .risk-dot {
+      display: inline-block;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .dot-red    { background: var(--red); }
+    .dot-amber  { background: var(--amber); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 11px;
+      color: var(--text-sub);
+      border-top: 1px solid var(--sap-border);
+      background: var(--white);
+      margin-top: 12px;
+    }
+    footer a { color: var(--sap-blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .kpi-row, .sla-row { grid-template-columns: repeat(3, 1fr); }
+      .charts-row, .charts-row-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .kpi-row, .sla-row { grid-template-columns: 1fr 1fr; }
+      header { padding: 20px; }
+      main { padding: 20px 12px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header>
+  <div>
+    <div class="logo">SAP Marketing Technology</div>
+    <h1>Marketing IT Dashboard — 2026 YTD</h1>
+  </div>
+  <div class="meta">
+    <strong>JIRA Filter: 379048</strong><br>
+    Jan 1 – Aug 7, 2026 &nbsp;·&nbsp; 6 IT Systems<br>
+    Last refreshed: Aug 7, 2026
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════ PIPELINE KPIs ═══════════════════════ -->
+  <div>
+    <div class="section-label">Pipeline Overview</div>
+    <div class="kpi-row">
+      <div class="kpi-card total">
+        <div class="kpi-label">Total Tickets</div>
+        <div class="kpi-value">21</div>
+        <div class="kpi-sub">2026 YTD raised</div>
+      </div>
+      <div class="kpi-card delivered">
+        <div class="kpi-label">Delivered</div>
+        <div class="kpi-value">16</div>
+        <div class="kpi-sub">76% delivery rate</div>
+      </div>
+      <div class="kpi-card active">
+        <div class="kpi-label">In Progress</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-sub">Active right now</div>
+      </div>
+      <div class="kpi-card backlog">
+        <div class="kpi-label">Backlog</div>
+        <div class="kpi-value">0</div>
+        <div class="kpi-sub">No idle tickets</div>
+      </div>
+      <div class="kpi-card cancelled">
+        <div class="kpi-label">Cancelled</div>
+        <div class="kpi-value">1</div>
+        <div class="kpi-sub">Scope removed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ SLA KPIs ═══════════════════════ -->
+  <div>
+    <div class="section-label">SLA Performance (16 Delivered Tickets)</div>
+    <div class="sla-row">
+      <div class="sla-card">
+        <div class="sla-label">Avg Cycle Time</div>
+        <div class="sla-value">38.6<span style="font-size:16px;opacity:.7"> d</span></div>
+        <div class="sla-sub">Creation → resolution</div>
+      </div>
+      <div class="sla-card">
+        <div class="sla-label">Median Delivery</div>
+        <div class="sla-value">27<span style="font-size:16px;opacity:.7"> d</span></div>
+        <div class="sla-sub">50th percentile</div>
+      </div>
+      <div class="sla-card">
+        <div class="sla-label">≤ 14 Days</div>
+        <div class="sla-value">19<span style="font-size:16px;opacity:.7">%</span></div>
+        <div class="sla-sub">Fast-track delivery</div>
+      </div>
+      <div class="sla-card">
+        <div class="sla-label">≤ 30 Days</div>
+        <div class="sla-value">56<span style="font-size:16px;opacity:.7">%</span></div>
+        <div class="sla-sub">Target SLA met</div>
+      </div>
+      <div class="sla-card">
+        <div class="sla-label">≤ 60 Days</div>
+        <div class="sla-value">81<span style="font-size:16px;opacity:.7">%</span></div>
+        <div class="sla-sub">Extended SLA met</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ CHARTS ROW 1 ═══════════════════════ -->
+  <div class="charts-row">
+
+    <!-- Status Distribution -->
+    <div class="card">
+      <div class="card-title">Ticket Status Distribution</div>
+      <div class="card-subtitle">Pipeline stage breakdown — 2026 YTD</div>
+      <div class="chart-wrap pie">
+        <canvas id="chartStatus"></canvas>
+      </div>
+    </div>
+
+    <!-- Monthly Trend -->
+    <div class="card">
+      <div class="card-title">Monthly Ticket Volume</div>
+      <div class="card-subtitle">Tickets raised per month — Feb to Jul 2026</div>
+      <div class="chart-wrap bar">
+        <canvas id="chartMonthly"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════ CHARTS ROW 2 ═══════════════════════ -->
+  <div class="charts-row">
+
+    <!-- System Breakdown -->
+    <div class="card">
+      <div class="card-title">Tickets by IT System</div>
+      <div class="card-subtitle">IESPRODSPT + IESCNQRSALES account for 80% of all work</div>
+      <div class="chart-wrap hbar">
+        <canvas id="chartSystems"></canvas>
+      </div>
+    </div>
+
+    <!-- Assignee Workload -->
+    <div class="card">
+      <div class="card-title">Assignee Workload</div>
+      <div class="card-subtitle">Ticket count per engineer — concentration risk highlighted</div>
+      <div class="chart-wrap hbar">
+        <canvas id="chartAssignees"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════ ACTIVE TICKETS ═══════════════════════ -->
+  <div class="card">
+    <div class="card-title">⚠️ Active Tickets — Aging Risk Monitor</div>
+    <div class="card-subtitle">Open tickets as of Aug 7, 2026 · Tickets past 60 days are at SLA risk</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Summary</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Assignee</th>
+            <th>Created</th>
+            <th style="text-align:right">Age</th>
+            <th>Risk Assessment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="aging-critical">
+            <td class="ticket-key"><a href="https://jira.tools.sap/browse/SMA-2066" target="_blank">SMA-2066</a></td>
+            <td class="summary-cell">BE-3756 Solution Design: Contact ID Hashing Solution SD</td>
+            <td><span class="badge badge-blue">In Review</span></td>
+            <td><span class="badge badge-red">High</span></td>
+            <td>Hurtado, Paula</td>
+            <td>Apr 8, 2026</td>
+            <td class="days-cell days-risk">121d</td>
+            <td><span class="risk-dot dot-red"></span>Critical — 121 days, High priority</td>
+          </tr>
+          <tr class="aging-elevated">
+            <td class="ticket-key"><a href="https://jira.tools.sap/browse/IESPRODSPT-1010" target="_blank">IESPRODSPT-1010</a></td>
+            <td class="summary-cell">BE-4234/4235 Demandbase Salesforce SOAP API Login Retirement (SF)</td>
+            <td><span class="badge badge-blue">In Progress</span></td>
+            <td><span class="badge badge-grey">Medium</span></td>
+            <td>Reddy, Goutham</td>
+            <td>Jun 2, 2026</td>
+            <td class="days-cell days-warn">66d</td>
+            <td><span class="risk-dot dot-amber"></span>Elevated — past 60d SLA threshold</td>
+          </tr>
+          <tr class="aging-elevated">
+            <td class="ticket-key"><a href="https://jira.tools.sap/browse/IESPRODSPT-1016" target="_blank">IESPRODSPT-1016</a></td>
+            <td class="summary-cell">BE-4240 OAuth Request (SF)</td>
+            <td><span class="badge badge-blue">In Progress</span></td>
+            <td><span class="badge badge-grey">Medium</span></td>
+            <td>Reddy, Goutham</td>
+            <td>Jun 5, 2026</td>
+            <td class="days-cell days-warn">63d</td>
+            <td><span class="risk-dot dot-amber"></span>Elevated — past 60d SLA threshold</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ SLA DETAIL TABLE ═══════════════════════ -->
+  <div class="card">
+    <div class="card-title">Per-Ticket SLA Detail — All Delivered Tickets</div>
+    <div class="card-subtitle">Cycle time = creation date to resolution date (or last-update date as proxy). Sorted fastest → slowest.</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Ticket</th>
+            <th>Summary</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Resolved</th>
+            <th style="text-align:right">Days</th>
+            <th>SLA Band</th>
+          </tr>
+        </thead>
+        <tbody id="slaTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Data source: <a href="https://jira.tools.sap/issues/?filter=379048" target="_blank">JIRA Filter 379048</a> &nbsp;·&nbsp;
+  SAP Marketing Technology &nbsp;·&nbsp;
+  Generated by Joule Work Desktop &nbsp;·&nbsp;
+  Cycle time uses resolution date where available, otherwise last-updated date as proxy.
+</footer>
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+<script>
+/* ── DATA ── */
+const slaTickets = [
+  { key:"IESSLMINTAKE-2681", summary:"BE-3756 Contact ID Hashing — Dev Work for Q3",               project:"IESSLMINTAKE",  status:"Done",                     created:"2026-07-21", resolved:"2026-07-21", days:0   },
+  { key:"IESCNQRSVSPT-2321", summary:"QA TASK — BE-2587 Contact List Report Enhancement Pt 2",     project:"IESCNQRSVSPT",  status:"Done",                     created:"2026-05-19", resolved:"2026-05-25", days:6   },
+  { key:"IESPRODSPT-910",    summary:"BE-3929 Add New Values to Invoice Solution Field (SF)",       project:"IESPRODSPT",    status:"Done",                     created:"2026-02-16", resolved:"2026-02-23", days:7   },
+  { key:"IESCNQRSALES-2348", summary:"QA TASK — BE-2587 Contact List Report Enhancement",          project:"IESCNQRSALES",  status:"Done",                     created:"2026-04-29", resolved:"2026-05-19", days:20  },
+  { key:"IESPRODSPT-1005",   summary:"BE-4234/4235 Marketo Salesforce SOAP API Retirement (SF)",   project:"IESPRODSPT",    status:"Done",                     created:"2026-05-26", resolved:"2026-06-15", days:20  },
+  { key:"IESCNQRSALES-2373", summary:"BE-4133 SPIKE: Enable Accounts as Campaign Members",         project:"IESCNQRSALES",  status:"Done",                     created:"2026-05-18", resolved:"2026-06-08", days:21  },
+  { key:"IESPRODSPT-1050",   summary:"BE-4355 Migrate SF OAuth to Client Credentials Flow",        project:"IESPRODSPT",    status:"Pending Release Approval", created:"2026-07-06", resolved:"2026-07-28", days:22  },
+  { key:"IESCNQRSALES-2241", summary:"BE-3942 Assigned Account MDR automation not working (bug)",  project:"IESCNQRSALES",  status:"Done",                     created:"2026-02-17", resolved:"2026-03-16", days:27  },
+  { key:"IESPRODSPT-964",    summary:"SPIKE — BE-4071 Campaign by Member Report Issue (SF)",       project:"IESPRODSPT",    status:"Done",                     created:"2026-04-08", resolved:"2026-05-05", days:27  },
+  { key:"IESPRODSPT-1066",   summary:"BE-4227 Global Customer Lead queue — HV forms (SF)",         project:"IESPRODSPT",    status:"Done",                     created:"2026-06-24", resolved:"2026-07-30", days:36  },
+  { key:"IESPRODSPT-1014",   summary:"BE-2853 Production Deployment for Allocadia API User",       project:"IESPRODSPT",    status:"Done",                     created:"2026-06-05", resolved:"2026-07-16", days:41  },
+  { key:"IESCNQRSALES-2264", summary:"BE-3977 Re-do SFDC/G2 Webhook (SF)",                        project:"IESCNQRSALES",  status:"Dev Done",                 created:"2026-03-03", resolved:"2026-04-15", days:43  },
+  { key:"IESCNQRSALES-2333", summary:"BE-2587 Enhancement to Contact List Report — SF Follow-up",  project:"IESCNQRSALES",  status:"Done",                     created:"2026-04-15", resolved:"2026-05-29", days:44  },
+  { key:"IESCNQRSALES-2317", summary:"BE-4063 Create new lead queue for EMEA customer leads (SF)", project:"IESCNQRSALES",  status:"Done",                     created:"2026-04-06", resolved:"2026-06-16", days:71  },
+  { key:"IESARTCNQRCS-893",  summary:"BE-3756 Contact ID Hashing Solution — 2026 Q2",             project:"IESARTCNQRCS",  status:"Done",                     created:"2026-03-17", resolved:"2026-07-02", days:107 },
+  { key:"IESPRODSPT-904",    summary:"BE-3911 Marketo Sync read access to SAP Master Code (SF)",   project:"IESPRODSPT",    status:"Done",                     created:"2026-02-09", resolved:"2026-06-15", days:126 },
+];
+
+/* ── RENDER SLA TABLE ── */
+function slaBand(d) {
+  if (d <=  14) return { label:"≤ 14d ✓", cls:"badge-green",  dayCls:"days-ok"   };
+  if (d <=  30) return { label:"≤ 30d ✓", cls:"badge-blue",   dayCls:"days-mid"  };
+  if (d <=  60) return { label:"≤ 60d ✓", cls:"badge-amber",  dayCls:"days-warn" };
+  return              { label:"> 60d ⚠",  cls:"badge-red",    dayCls:"days-risk" };
+}
+function statusBadge(s) {
+  if (s === "Done")                     return "badge-green";
+  if (s === "Dev Done")                 return "badge-blue";
+  if (s === "Pending Release Approval") return "badge-purple";
+  return "badge-grey";
+}
+
+const tbody = document.getElementById("slaTableBody");
+slaTickets.forEach((t, i) => {
+  const b = slaBand(t.days);
+  tbody.innerHTML += `
+    <tr>
+      <td style="color:var(--text-sub);font-size:11px">${i+1}</td>
+      <td class="ticket-key"><a href="https://jira.tools.sap/browse/${t.key}" target="_blank">${t.key}</a></td>
+      <td class="summary-cell">${t.summary}</td>
+      <td style="font-size:11px;white-space:nowrap;color:var(--text-sub)">${t.project}</td>
+      <td><span class="badge ${statusBadge(t.status)}">${t.status}</span></td>
+      <td style="white-space:nowrap;font-size:11px">${t.created}</td>
+      <td style="white-space:nowrap;font-size:11px">${t.resolved}</td>
+      <td class="days-cell ${b.dayCls}">${t.days}d</td>
+      <td><span class="badge ${b.cls}">${b.label}</span></td>
+    </tr>`;
+});
+
+/* ── CHART.JS DEFAULTS ── */
+Chart.defaults.font.family = "'72', 'Helvetica Neue', Arial, sans-serif";
+Chart.defaults.font.size   = 12;
+Chart.defaults.color       = "#556b82";
+
+/* ── 1. STATUS PIE ── */
+new Chart(document.getElementById("chartStatus"), {
+  type: "doughnut",
+  data: {
+    labels: ["Done (14)", "Dev Done (1)", "Pending Release (1)", "In Progress (2)", "In Review (1)", "Cancelled (1)"],
+    datasets: [{
+      data: [14, 1, 1, 2, 1, 1],
+      backgroundColor: ["#30914c","#0070f2","#7b2ea0","#3d8fcc","#8ac7f7","#bb0000"],
+      borderWidth: 2,
+      borderColor: "#fff",
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    cutout: "60%",
+    plugins: {
+      legend: { position:"bottom", labels:{ boxWidth:12, padding:12, font:{ size:11 } } },
+      tooltip: { callbacks: {
+        label: ctx => ` ${ctx.label}: ${ctx.raw} tickets`
+      }}
+    }
+  }
+});
+
+/* ── 2. MONTHLY BAR ── */
+new Chart(document.getElementById("chartMonthly"), {
+  type: "bar",
+  data: {
+    labels: ["Feb","Mar","Apr","May","Jun","Jul"],
+    datasets: [{
+      label: "Tickets Raised",
+      data: [3, 2, 6, 3, 4, 2],
+      backgroundColor: "#0070f2cc",
+      borderColor: "#0070f2",
+      borderWidth: 1.5,
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:"#f0f0f0" } },
+      x: { grid:{ display:false } }
+    },
+    plugins: { legend:{ display:false } }
+  }
+});
+
+/* ── 3. SYSTEMS HORIZONTAL BAR ── */
+new Chart(document.getElementById("chartSystems"), {
+  type: "bar",
+  data: {
+    labels: ["IESPRODSPT","IESCNQRSALES","IESSLMINTAKE","IESCNQRSVSPT","SMA","IESARTCNQRCS"],
+    datasets: [{
+      label: "Tickets",
+      data: [9, 7, 1, 1, 1, 1],
+      backgroundColor: ["#0070f2","#30914c","#7b2ea0","#e76500","#3d8fcc","#bb0000"],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:"#f0f0f0" } },
+      y: { grid:{ display:false } }
+    },
+    plugins: { legend:{ display:false } }
+  }
+});
+
+/* ── 4. ASSIGNEE WORKLOAD ── */
+new Chart(document.getElementById("chartAssignees"), {
+  type: "bar",
+  data: {
+    labels: [
+      "Reddy, Goutham","Stork, Kelly","Dhilsha, J.","Gunasekar, K.",
+      "Priyadarshinee, P.","Chaudhari, K.","Atmaram Veer, R.",
+      "Kumar, Rahul","Jha, Varsha","Hurtado, Paula"
+    ],
+    datasets: [{
+      label: "Tickets Assigned",
+      data: [6, 2, 2, 2, 2, 2, 1, 1, 1, 1],
+      backgroundColor: ctx => ctx.dataIndex === 0 ? "#e76500" : "#0070f2cc",
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:"#f0f0f0" } },
+      y: { grid:{ display:false }, ticks:{ font:{ size:11 } } }
+    },
+    plugins: {
+      legend:{ display:false },
+      tooltip:{ callbacks:{
+        label: ctx => ` ${ctx.raw} ticket${ctx.raw > 1 ? "s" : ""}${ctx.dataIndex === 0 ? " — ⚠ concentration risk" : ""}`
+      }}
+    }
+  }
+});
+</script>
+</body>
+</html>
